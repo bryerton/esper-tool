@@ -4,7 +4,7 @@ ESPER TOOL
 
 Overview
 --------
-A command line utility for accessing a device running the ESPER web service.
+A python-based command line utility for accessing a device running the ESPER web service. Works with Python 2 and 3. 
 
 The tool allows for the reading and writing of ESPER variables via the command line.
 
@@ -17,6 +17,10 @@ The available subcommands are:
 - `download`_
 
 For a list of interactive shell commands type `help` in the interactive shell prompt
+
+Installation
+------------
+The recommendation installation method is via pip. Simply type: `pip install esper-tool`, if you wish to upgrade to the latest version type: `pip install -U esper-tool`
 
 Interactive
 -----------
