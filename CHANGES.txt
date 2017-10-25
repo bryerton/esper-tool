@@ -1,0 +1,53 @@
+V1.0.0, 2017-09-18
+- Initial release
+
+V1.1.0, 2017-09-23
+- Changed CTRL+C behavior slightly, to allow break of read [vid] repeat without exiting interactive shell
+- cleaned up error messages
+- added documentation in README.rst
+- added interactive shell, allows read/write/listing of ESPER service
+
+V1.2.0, 2017-09-23
+- Added compatibility with python 3.x
+- Added new download option for binary download of variables (opposite of upload command)
+- minor documentation fixes
+- added download and upload capability to interactive shell
+
+V1.2.1, 2017-09-23
+- minor documentation fixes
+
+V1.2.2, 2017-09-23
+- test for fixing script execution on python3
+
+V1.2.3, 2017-09-23
+- added default parser fix for python2/3
+- made 'interactive' mode the default
+
+V1.2.4 2017-09-23
+- fixed erronous argparser settings for interactive mode
+
+V1.2.5 2017-09-23
+- display ascii arrays directly in interactive mode
+
+V1.2.6 2017-09-24
+- added support for HTTP basic auth via --user and --password 
+- added test for invalid ESPER response (old versions or non-json response)
+
+V1.2.7 2017-09-25
+- removed dead code
+
+V1.2.8 2017-09-25
+- added privilege escalation for windows to allow network access
+
+V1.2.9 2017-09-26
+- fixed privilege escalation for windows (added argv)
+
+V1.2.10 2017-09-26
+- added option and status flags to interactive read output
+- cleaned up read output
+
+V1.2.11 2017-09-30
+- added command line completion of variable and module names for interactive commands
+- forced lowercasing of vid and mid in interactive mode
+- attempt to add tab completion via pyreadline in windows
+- added more documentation for commands

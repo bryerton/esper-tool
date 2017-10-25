@@ -1,0 +1,1 @@
+rm -rf dist; rm -rf esper_tool.egg-info; python setup.py sdist; twine upload dist/*
