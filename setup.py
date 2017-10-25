@@ -65,7 +65,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['esper-tool'],
+    packages=['esper_tool'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -90,7 +90,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'esper-tool': [],
+        'esper_tool': [],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may

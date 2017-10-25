@@ -21,7 +21,7 @@ For a list of interactive shell commands type `help` in the interactive shell pr
 Interactive
 -----------
  Command:
-  `esper_tool interactive [-h] [-u USER] [-p PASS] <url> [mid]`
+  `esper-tool interactive [-h] [-u USER] [-p PASS] <url> [mid]`
 
  Purpose:
   Connects to an esper service located at `url` and opens an interactive shell 
@@ -51,7 +51,7 @@ Interactive
 Read
 ----
  Command:
-  `esper_tool read [-h] [-u USER] [-p PASS] [-o OFFSET] [-l LEN] <url> <mid> <vid>`
+  `esper-tool read [-h] [-u USER] [-p PASS] [-o OFFSET] [-l LEN] <url> <mid> <vid>`
  
  Purpose:
   Read an ESPER variable's data, located at URL. Return value is JSON data type
@@ -92,13 +92,13 @@ Read
    Variable ID or VID. May be given as numerical value, or variable key. 
 
  Examples:
-  `esper_tool read -o 1 -l 32 localhost:8080 0 0`
+  `esper-tool read -o 1 -l 32 localhost:8080 0 0`
    Reads `32` elements of variable `0` starting at offset `1`, at` localhost:8080` module `0`, variable `0`
 
 Write
 -----
  Command:
-  `esper_tool write [-h] [-u USER] [-p PASS] [-d DATA] [-f FILE] [-o OFFSET] <url> <mid> <vid>`
+  `esper-tool write [-h] [-u USER] [-p PASS] [-d DATA] [-f FILE] [-o OFFSET] <url> <mid> <vid>`
  
  Purpose:
   Writes JSON data to an ESPER variable. May write the full array or a slice. Data can be specified on the command line or by a file
@@ -144,17 +144,17 @@ Write
    Variable ID or VID. May be given as numerical value, or variable key. 
 
  Examples:
-  `esper_tool write -d 255 localhost 1 2`
+  `esper-tool write -d 255 localhost 1 2`
    Writes the value `255` to module `1`, variable `2` at `localhost`
 
-  `esper_tool write -d [0,2] -o 1 http://localhost:8080 mymodule myvar`
+  `esper-tool write -d [0,2] -o 1 http://localhost:8080 mymodule myvar`
    Writes the array `[0,2]` to the variable `myvar` starting at the second element. The variable is located in the module `mymodule` on host `localhost:8080` 
 
 Upload
 ------
 
  Command:
-  `esper_tool upload [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
+  `esper-tool upload [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
  
  Purpose:
   Upload a binary file to an ESPER variable. Particularly useful for updates to large variable arrays, binary data must match binary format of ESPER variable, or data loaded will be erroneous. 
@@ -195,13 +195,13 @@ Upload
    Variable ID or VID. May be given as numerical value, or variable key. 
 
  Examples:
-  `esper_tool upload -v --file ~/waveform.bin -r 3 http://localhost:80/ 5 waveform_replay`
+  `esper-tool upload -v --file ~/waveform.bin -r 3 http://localhost:80/ 5 waveform_replay`
    Uploads the contents of file `waveform.bin` to `localhost` module `5`, variable `waveform_replay`. It will retry `3` times in the event of failure
 
 Download
 --------
  Command:
-  `esper_tool download [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
+  `esper-tool download [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
  
  Purpose:
   Downloads variable data to a binary file.
@@ -242,5 +242,5 @@ Download
    Variable ID or VID. May be given as numerical value, or variable key. 
 
  Examples:
-  `esper_tool download -v --file ~/waveform.bin -r 3 http://localhost:80/ 5 waveform_replay`
+  `esper-tool download -v --file ~/waveform.bin -r 3 http://localhost:80/ 5 waveform_replay`
    Download the contents of file `localhost` module `5`, variable `waveform_replay` to `waveform.bin`. It will retry `3` times in the event of failure

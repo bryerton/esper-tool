@@ -186,7 +186,7 @@ class InteractiveMode(cmd.Cmd):
                 self.mod_completion.append(resp['module'][i]['key'])
 
     def do_version(self, line):
-        """Purpose: Prints current version of esper_tool\nUsage: version\n"""
+        """Purpose: Prints current version of esper-tool\nUsage: version\n"""
         print(self.prog + ' ' + __version__)
 
     def do_uptime(self, line):
@@ -568,16 +568,16 @@ class InteractiveMode(cmd.Cmd):
             print("Unknown error downloading file")
 
     def do_exit(self, line):
-        """Purpose: Quit esper_tool\nUsage: exit\n"""
+        """Purpose: Quit esper-tool\nUsage: exit\n"""
         return True
 
     def do_quit(self, line):
-        """Purpose: Quit esper_tool\nUsage: quit\n"""
+        """Purpose: Quit esper-tool\nUsage: quit\n"""
         return True
 
 def main():
     try:
-        prog='esper_tool'    
+        prog='esper-tool'    
 
         if(platform.system() == u'Windows'):
             if not is_admin():
