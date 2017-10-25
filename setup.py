@@ -14,7 +14,7 @@ def readme():
         return f.read()
 
 setup(
-    name='esper_tool',
+    name='esper-tool',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -25,7 +25,7 @@ setup(
     long_description=readme(),
 
     # The project's main homepage.
-    url='https://edev-group.triumf.ca/',
+    url='https://github.com/bryerton/esper-tool',
 
     # Author details
     author='Bryerton Shaw',
@@ -65,7 +65,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['esper_tool'],
+    packages=['esper-tool'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -90,7 +90,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'esper_tool': [],
+        'esper-tool': [],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -104,7 +104,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'esper_tool = esper_tool.__main__:main'
+            'esper-tool = esper_tool.__main__:main'
         ]
     }
 )
