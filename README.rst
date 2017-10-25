@@ -20,11 +20,12 @@ For a list of interactive shell commands type `help` in the interactive shell pr
 
 Installation
 ------------
-  The recommendation installation method is via pip. 
-    To install:
-      `pip install esper-tool`
-    To upgrade:
-      `pip install -U esper-tool`
+The recommended installation method is via pip
+
+  To install:
+    `pip install esper-tool`
+  To upgrade:
+    `pip install -U esper-tool`
 
 Interactive
 -----------
