@@ -31,16 +31,26 @@ def is_admin():
         return False
 
 def request_get_with_auth(url, params, user, password):
-    if(user):
-        return requests.get(url, params=params, auth=(user, password))
-    else:
-        return requests.get(url, params=params)
+    try:
+        if(user):
+            return requests.get(url, params=params, auth=(user, password))
+        else:
+            return requests.get(url, params=params)
+    except requests.exceptions.RequestException as e:
+        print("Unable to connect to " + str(url))
+        #print(e)
+        sys.exit(1)
 
 def request_post_with_auth(url, params, payload, user, password):
-    if(user):
-        return requests.post(url, params=params, data=payload, auth=(user, password))
-    else:
-        return requests.post(url, params=params, data=payload)
+    try:
+        if(user):
+            return requests.post(url, params=params, data=payload, auth=(user, password))
+        else:
+            return requests.post(url, params=params, data=payload)
+    except requests.exceptions.RequestException as e:
+        print("Unable to connect to " + str(url))
+        #print(e)
+        sys.exit(1)
 
 def set_default_subparser(self, name, args=None):
     """default subparser selection. Call after setup, just before parse_args()
@@ -246,6 +256,10 @@ class InteractiveMode(cmd.Cmd):
         """Purpose: Sets current module\nUsage: module <mid>\n"""
         if(line):
             line_args = str.split(line)
+            # remove starting / if it exists
+            if(line_args[0][0] == '/' ):
+                line_args[0] = line_args[0][1:] 
+
             querystring = {'mid': line_args[0].lower() }
             r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password)
 
@@ -325,35 +339,62 @@ class InteractiveMode(cmd.Cmd):
         """Purpose: Read module variable(s)\nUsage: read <vid> [offset] [length] [repeat]\n"""
         try:
             if(line): 
+                start   = line.find('[')
+                mid     = line.find(':')
+                end     = line.find(']')
+                
+                # We do this to ensure the str.split() works as expected to break up 
+                if(start != -1):
+                    if(line[start-1] != ' '):
+                        line = line[0:start] + ' ' + line[start:]
+                
                 line_args = str.split(line,' ')
-        
+                
                 vid = line_args[0].lower() 
+
                 offset = 0
                 length = 0
                 repeat = False
-
+                
                 if(len(line_args) > 1):
                     if((line_args[1].lower() == 'r') or (line_args[1].lower()  == 'repeat')):
                         repeat = True
                     else:
-                        offset = line_args[1]
+                        try:
+                            start = line_args[1].find('[')
+                            mid = line_args[1].find(':')
+                            end = line_args[1].find(']')
+                            if(start != -1):
+                                if(mid != -1):
+                                    offset = int(line_args[1][start+1:mid])
+                                    length = int(line_args[1][end-1:mid+2]) - offset + 1 
+                                else:
+                                    offset = int(line_args[1][start+1:end])
+                                    length = 1
+                            else:
+                                offset = int(line_args[1])
+                        except:
+                            offset = 0
+                            length = 0
+                            repeat = False
+                            
                 
-                if(len(line_args) > 2):
-                    if((line_args[2].lower()  == 'r') or (line_args[2].lower()  == 'repeat')):
-                        repeat = True
-                    else:
-                        length = line_args[2]
-
-                if(len(line_args) > 3):
-                    if((line_args[3].lower()  == 'r') or (line_args[3].lower()  == 'repeat')):
-                        repeat = True
-                    else:
-                        repeat = False
+                    if(len(line_args) > 2):
+                        if((line_args[2].lower()  == 'r') or (line_args[2].lower()  == 'repeat')):
+                            repeat = True
+                        else:
+                            length = int(line_args[2])
+                    
+                    if(len(line_args) > 3):
+                        if((line_args[3].lower()  == 'r') or (line_args[3].lower()  == 'repeat')):
+                            repeat = True
+                        else:
+                            repeat = False
                     
                 try:
                     done = False
                     while done != True:
-                        querystring = {'mid': self.module, 'vid': vid, 'offset': offset, 'len': length, 'includeData': 'y'}
+                        querystring = {'mid': self.module, 'vid': vid, 'offset': str(offset), 'len': str(length), 'includeData': 'y'}
                         r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password)
                         if(r.status_code == 200): 
                             resp = r.json()
