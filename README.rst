@@ -30,7 +30,7 @@ The recommended installation method is via pip
   To upgrade:
     `pip install -U esper-tool`
   To run it locally from the github source:
-    `python -m esper_wave`
+    `python -m esper_tool`
 
 Interactive
 -----------
