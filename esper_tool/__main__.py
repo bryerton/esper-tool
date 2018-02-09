@@ -793,7 +793,7 @@ def main():
                     sys.exit(0) 
                 
                 # Send POST request
-                r = request_post_with_auth(args.url + '/read_module', querystring, payload, args.user, args.password)
+                r = request_post_with_auth(args.url + '/write_var', querystring, payload, args.user, args.password)
                 if(r.status_code == 200):
                     if(args.verbose): 
                         err = r.json()
