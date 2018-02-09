@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/bryerton/esper-tool.svg?branch=master
+    :target: https://travis-ci.org/bryerton/esper-tool
+
 ==========
 ESPER TOOL
 ==========
