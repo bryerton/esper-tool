@@ -61,9 +61,6 @@ V1.2.13 2017-10-24
 - added .gitignore file
 
 V1.2.14 2017-10-24
-<<<<<<< HEAD
-- test of travis cl pypi integration
-=======
 - test of travis cl pypi integration
 
 V1.2.15 2018-02-08
@@ -71,4 +68,3 @@ V1.2.15 2018-02-08
 
 V1.2.16 2018-02-08
 - fixed non-display of version when --version was used
->>>>>>> master
