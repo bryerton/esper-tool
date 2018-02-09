@@ -64,6 +64,9 @@ def set_default_subparser(self, name, args=None):
     for arg in sys.argv[1:]:
         if arg in ['-h', '--help']:  # global help if no subparser
             break
+        if arg in ['--version']:  # global help if no subparser
+            break
+            
     else:
         for x in self._subparsers._actions:
             if not isinstance(x, argparse._SubParsersAction):
