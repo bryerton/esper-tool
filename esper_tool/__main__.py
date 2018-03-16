@@ -623,10 +623,10 @@ def main():
     try:
         prog='esper-tool'    
 
-        if(platform.system() == u'Windows'):
-            if not is_admin():
+#        if(platform.system() == u'Windows'):
+#            if not is_admin():
                 # Re-run the program with admin rights
-                ctypes.windll.shell32.ShellExecuteW(None, u"runas", text(sys.executable), text(sys.argv), None, 1)        
+#                ctypes.windll.shell32.ShellExecuteW(None, u"runas", text(sys.executable), text(sys.argv), None, 1)        
 
         argparse.ArgumentParser.set_default_subparser = set_default_subparser
 
@@ -922,7 +922,7 @@ def main():
                         # Get the first chunk of the file
                         file_offset = 0
                         retry_count = 0
-                        max_retries = args.retry
+                        max_retries = int(args.retry)
                         while(file_offset < file_size):
                             sys.stdout.flush()
 

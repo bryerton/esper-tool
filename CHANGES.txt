@@ -78,3 +78,7 @@ V1.2.18 2018-02-08
 V1.2.19 2018-03-16
 - fixed upload retry (max_retry was str instead of int)
 - added detection of locked or read-only variable on upload attempt
+
+V1.2.20 2018-03-16
+- commented out windows privilege elevation code
+- fixed download retry (max_retry was str instead of int)
