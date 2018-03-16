@@ -854,7 +854,7 @@ def main():
                         chunk_size = len(payload)
                         file_offset = 0
                         retry_count = 0
-                        max_retries = args.retry
+                        max_retries = int(args.retry)
                         while(chunk_size > 0):
                             sys.stdout.flush()
                             # transmit payload using binary methods
@@ -874,7 +874,10 @@ def main():
                                     strCompleteness = '#' * int(file_offset / float(file_size) * 50)
                                     print("\rUploading [%-50s]" % (strCompleteness),end="")
                             # Retry up to X times
-                            elif(retry_count < max_retries):
+                            elif(r.status_code == 405):
+                                print("\nUpload Failed! Variable is Locked or Read-Only")
+                                sys.exit(1)
+                            elif(retry_count < max_retries):                                
                                 retry_count += 1
                                 print("\nUpload attempt failed, retrying...")
                             else:
