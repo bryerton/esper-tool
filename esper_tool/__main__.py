@@ -33,9 +33,9 @@ def is_admin():
 def request_get_with_auth(url, params, user, password):
     try:
         if(user):
-            return requests.get(url, params=params, auth=(user, password))
+            return requests.get(url, params=params, auth=(user, password), timeout=5)
         else:
-            return requests.get(url, params=params)
+            return requests.get(url, params=params, timeout=5)
     except requests.exceptions.RequestException as e:
         print("Unable to connect to " + str(url))
         #print(e)
@@ -44,9 +44,9 @@ def request_get_with_auth(url, params, user, password):
 def request_post_with_auth(url, params, payload, user, password):
     try:
         if(user):
-            return requests.post(url, params=params, data=payload, auth=(user, password))
+            return requests.post(url, params=params, data=payload, auth=(user, password), timeout=5)
         else:
-            return requests.post(url, params=params, data=payload)
+            return requests.post(url, params=params, data=payload, timeout=5)
     except requests.exceptions.RequestException as e:
         print("Unable to connect to " + str(url))
         #print(e)
@@ -469,7 +469,7 @@ class InteractiveMode(cmd.Cmd):
                 return
 
             querystring = {'mid': self.module, 'vid': vid }
-            r = requests.get(self.url + '/read_var', params=querystring)
+            r = requests.get(self.url + '/read_var', params=querystring, timeout=5)
             if(r.status_code == 200):
                 # Var found, lets see what we got!
                 vinfo = r.json()
