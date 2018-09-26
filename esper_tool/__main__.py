@@ -30,23 +30,37 @@ def is_admin():
     except:
         return False
 
-def request_get_with_auth(url, params, user, password):
+def request_get_with_auth(url, params, user, password, timeout_in_seconds):
     try:
         if(user):
-            return requests.get(url, params=params, auth=(user, password), timeout=5)
+            return requests.get(url, params=params, auth=(user, password), timeout=timeout_in_seconds)
         else:
-            return requests.get(url, params=params, timeout=5)
+            return requests.get(url, params=params, timeout=timeout_in_seconds)
+
+    except requests.exceptions.Timeout: 
+        print("Timed out making request")
+        r = requests.Response()
+        r.status_code = 408
+        return r
+
     except requests.exceptions.RequestException as e:
         print("Unable to connect to " + str(url))
         #print(e)
         sys.exit(1)
 
-def request_post_with_auth(url, params, payload, user, password):
+def request_post_with_auth(url, params, payload, user, password, timeout_in_seconds):
     try:
         if(user):
-            return requests.post(url, params=params, data=payload, auth=(user, password), timeout=5)
+            return requests.post(url, params=params, data=payload, auth=(user, password), timeout=timeout_in_seconds)
         else:
-            return requests.post(url, params=params, data=payload, timeout=5)
+            return requests.post(url, params=params, data=payload, timeout=timeout_in_seconds)
+    
+    except requests.exceptions.Timeout: 
+        print("Timed out making request")
+        r = requests.Response()
+        r.status_code = 408
+        return r
+
     except requests.exceptions.RequestException as e:
         print("Unable to connect to " + str(url))
         #print(e)
@@ -174,6 +188,18 @@ def pretty_time_delta(seconds):
 class InteractiveMode(cmd.Cmd):
     """Interactive Mode"""
 
+    def emptyline(self):
+        pass
+
+    def do_timeout(self, line): 
+        """ Purpose: Adjust HTTP request timeout length """
+        line_args = str.split(line,' ')
+        if(line_args[0] == ''):
+            print("Current timeout period is " + str(self.timeout))
+        else:
+            self.timeout = float(line_args[0])
+            print("Timeout period is now " + str(self.timeout))
+
     def print_esper_error(self,err_json):
         try:
             print("Error %d: %s (%d)" % (err_json['error']['status'], err_json['error']['meaning'], err_json['error']['code']))
@@ -182,7 +208,7 @@ class InteractiveMode(cmd.Cmd):
 
     def get_module_variables(self):
         querystring = {'mid': self.module, 'includeVars': 'y' }
-        r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password)
+        r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password, self.timeout)
         self.var_completion = []        
         if(r.status_code == 200):
             resp = r.json()
@@ -191,7 +217,7 @@ class InteractiveMode(cmd.Cmd):
 
     def get_modules(self):
         querystring = {'includeMods': 'y' }
-        r = request_get_with_auth(self.url + '/read_node', querystring, self.user, self.password)
+        r = request_get_with_auth(self.url + '/read_node', querystring, self.user, self.password, self.timeout)
         self.mod_completion = []        
         if(r.status_code == 200):
             resp = r.json()
@@ -206,10 +232,10 @@ class InteractiveMode(cmd.Cmd):
         """Purpose: Get uptime of current ESPER service\nUsage: uptime\n"""
         querystring = {'mid': 'system', 'vid': 'uptime', 'dataOnly':'y'}
         try:
-            r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password)
+            r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
             if(r.status_code == 200): 
                 print('Uptime: ' + pretty_time_delta(r.json()[0]))
-            else:
+            elif(r):
                self.print_esper_error(r.json())
         
         except requests.exceptions.RequestException as e:
@@ -219,7 +245,7 @@ class InteractiveMode(cmd.Cmd):
         """Purpose: Lists available modules\nUsage: list\n"""
         try:
             querystring = {'includeMods': 'y'}
-            r = request_get_with_auth(self.url + '/read_node', querystring, self.user, self.password)
+            r = request_get_with_auth(self.url + '/read_node', querystring, self.user, self.password, self.timeout)
 
             if(r.status_code == 200): 
                 resp = r.json()
@@ -227,7 +253,8 @@ class InteractiveMode(cmd.Cmd):
                 print('%-5s %-16s %-32s' % ('---', '---', '----'))
                 for i in range(0,len(resp['module'])):
                     print('%-5s %-16s %-32s' % (str(resp['module'][i]['id']), resp['module'][i]['key'], resp['module'][i]['name'] ))
-            else:
+
+            elif(r):
                 self.print_esper_error(r.json())
 
         except requests.exceptions.RequestException as e:
@@ -264,14 +291,14 @@ class InteractiveMode(cmd.Cmd):
                 line_args[0] = line_args[0][1:] 
 
             querystring = {'mid': line_args[0].lower() }
-            r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password)
+            r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password, self.timeout)
 
             if(r.status_code == 200):
                 resp = r.json()
                 self.module = resp['key']
                 self.get_module_variables()
                 self.prompt = '[' + self.url + ':/' + self.module + ']> '
-            else:
+            elif(r):
                 self.print_esper_error(r.json())
                 
         else:
@@ -309,10 +336,11 @@ class InteractiveMode(cmd.Cmd):
                 offset = 0
 
             querystring = {'mid': self.module, 'vid': vid, 'offset': offset}
-            r = request_post_with_auth(self.url + '/write_var', querystring, payload, self.user, self.password)
+            r = request_post_with_auth(self.url + '/write_var', querystring, payload, self.user, self.password, self.timeout)
 
             if(r.status_code != 200): 
-                self.print_esper_error(r.json())
+                if(r):
+                    self.print_esper_error(r.json())
         except:
             print("Invalid Arguments")
 
@@ -398,11 +426,11 @@ class InteractiveMode(cmd.Cmd):
                     done = False
                     while done != True:
                         querystring = {'mid': self.module, 'vid': vid, 'offset': str(offset), 'len': str(length), 'includeData': 'y'}
-                        r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password)
+                        r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
                         if(r.status_code == 200): 
                             resp = r.json()
                             print(str(resp['d']))
-                        else:
+                        elif(r):
                             self.print_esper_error(r.json())
 
                         if(not repeat):
@@ -413,22 +441,29 @@ class InteractiveMode(cmd.Cmd):
                 except KeyboardInterrupt:
                     done = True
             else:
-                querystring = {'mid': self.module, 'includeVars': 'y', 'includeData': 'y'}
-                r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password)
+                querystring = {'mid': self.module, 'includeVars': 'y', 'includeData': 'n'}
+                r = request_get_with_auth(self.url + '/read_module', querystring, self.user, self.password, self.timeout)
                 if(r.status_code == 200): 
-                    resp = r.json()
-                    print('%-5s %-16s %-16s %-8s %-8s %-32s' % ('vid', 'key', 'type', 'options', 'status', 'data'))
-                    print('%-5s %-16s %-16s %-8s %-8s %-32s' % ('---', '---', '----', '-------', '------', '----'))
-                    for i in range(0,len(resp['var'])):
-                        if(not resp['var'][i]['d']): 
-                            print('%-5s %-16s %-16s %-8s %-8s %-32s' % (str(resp['var'][i]['id']), resp['var'][i]['key'], Esper().getTypeString(resp['var'][i]['type']), Esper().getOptionString(resp['var'][i]['opt']), Esper().getOptionString(resp['var'][i]['stat']), '%s[%d]' % ('Null',resp['var'][i]['len'])))
-                        elif((len(resp['var'][i]['d']) > 1) and (resp['var'][i]['type'] != 11)):
-                            print('%-5s %-16s %-16s %-8s %-8s %-32s' % (str(resp['var'][i]['id']), resp['var'][i]['key'], Esper().getTypeString(resp['var'][i]['type']), Esper().getOptionString(resp['var'][i]['opt']), Esper().getOptionString(resp['var'][i]['stat']), '%s[%d]' % ('Array',resp['var'][i]['len'])))
-                        elif(resp['var'][i]['type'] == 11):
-                            print('%-5s %-16s %-16s %-8s %-8s %-32s' % (str(resp['var'][i]['id']), resp['var'][i]['key'], Esper().getTypeString(resp['var'][i]['type']), Esper().getOptionString(resp['var'][i]['opt']), Esper().getOptionString(resp['var'][i]['stat']), '"%s"' % str(resp['var'][i]['d'])))
+                    mod_resp = r.json()                    
+                    print('%-5s %-32s %-16s %-8s %-8s %-32s' % ('vid', 'key', 'type', 'options', 'status', 'data'))
+                    print('%-5s %-32s %-16s %-8s %-8s %-32s' % ('---', '---', '----', '-------', '------', '----'))                    
+                    for i in range(0,len(mod_resp['var'])):
+                        if(mod_resp['var'][i]['type'] != 11): # limit request length if not a string
+                            querystring = {'mid': self.module, 'vid': mod_resp['var'][i]['id'], 'len': 5, 'includeData': 'y'}
                         else:
-                            print('%-5s %-16s %-16s %-8s %-8s %-32s' % (str(resp['var'][i]['id']), resp['var'][i]['key'], Esper().getTypeString(resp['var'][i]['type']), Esper().getOptionString(resp['var'][i]['opt']), Esper().getOptionString(resp['var'][i]['stat']), '%s' % str(resp['var'][i]['d'])))
-                else:
+                            querystring = {'mid': self.module, 'vid': mod_resp['var'][i]['id'], 'includeData': 'y'}
+                        r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
+                        if(r.status_code == 200): 
+                            resp = r.json()
+                            if(not resp['d']): 
+                                print('%-5s %-32 %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s[%d]' % ('Null',resp['len'])))
+                            elif((len(resp['d']) > 4) and (resp['type'] != 11)):
+                                print('%-5s %-32s %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s[%d]' % ('Array',resp['len'])))
+                            elif(resp['type'] == 11):
+                                print('%-5s %-32s %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '"%s"' % str(resp['d'])))
+                            else:
+                                print('%-5s %-32s %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s' % str(resp['d'])))
+                elif(r):
                     self.print_esper_error(r.json())
 
         except requests.exceptions.RequestException as e:
@@ -469,7 +504,7 @@ class InteractiveMode(cmd.Cmd):
                 return
 
             querystring = {'mid': self.module, 'vid': vid }
-            r = requests.get(self.url + '/read_var', params=querystring, timeout=5)
+            r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
             if(r.status_code == 200):
                 # Var found, lets see what we got!
                 vinfo = r.json()
@@ -494,7 +529,7 @@ class InteractiveMode(cmd.Cmd):
                     sys.stdout.flush()
                     # transmit payload using binary methods
                     querystring = {'mid': self.module, 'vid': vid, 'offset': file_offset, 'len': chunk_size, 'binary': 'y'}
-                    r = request_post_with_auth(self.url + '/write_var', querystring, payload, self.user, self.password)
+                    r = request_post_with_auth(self.url + '/write_var', querystring, payload, self.user, self.password, self.timeout)
 
                     # Did we transfer successfully?
                     if(r.status_code == 200):
@@ -516,7 +551,7 @@ class InteractiveMode(cmd.Cmd):
 
                 print("\nDone uploading " + os.path.basename(upload_file.name))
 
-            else:
+            elif(r):
                 self.print_esper_error(r.json())
 
         except:
@@ -558,7 +593,7 @@ class InteractiveMode(cmd.Cmd):
                 return
 
             querystring = {'mid': self.module, 'vid': vid }
-            r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password)
+            r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
 
             if(r.status_code == 200):
                 # Var found, lets see what we got!
@@ -584,7 +619,7 @@ class InteractiveMode(cmd.Cmd):
 
                     # transmit payload using binary methods
                     querystring = {'mid': self.module, 'vid': vid, 'offset': file_offset, 'len': chunk_size, 'binary': 'y', 'dataOnly': 'y'}
-                    r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password)
+                    r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
 
                     # Did we transfer successfully?
                     if(r.status_code == 200):
@@ -606,7 +641,7 @@ class InteractiveMode(cmd.Cmd):
 
                 print("\nDone download to " + os.path.basename(download_file.name))
 
-            else:
+            elif(r):
                 self.print_esper_error(r.json())
         except:
             print("Unknown error downloading file")
@@ -645,6 +680,8 @@ def main():
         parser_interactive.add_argument("mid", nargs='?', default='0', help="Module Id or Key")
         parser_interactive.add_argument("-u","--user", default=False, help="User for Auth")
         parser_interactive.add_argument("-p","--password", default=False, help="Password for Auth")
+        parser_interactive.add_argument("-t","--timeout", default=5, help="Request Timeout in Seconds")
+        
 
         # Write arguments
         parser_write = subparsers.add_parser('write', help='[-o <offset>] [-d <json value/array>]  <url> <mid> <vid>')
@@ -653,6 +690,7 @@ def main():
         parser_write.add_argument('-o','--offset', default='0',dest='offset', help='offset to write to')
         parser_write.add_argument("-u","--user", default=False, help="User for Auth")
         parser_write.add_argument("-p","--password", default=False, help="Password for Auth")
+        parser_write.add_argument("-t","--timeout", default=5, help="Request Timeout in Seconds")
         parser_write.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
         parser_write.add_argument("mid", help="Module Id or Key")
         parser_write.add_argument("vid", help="Variable Id or Key")
@@ -663,6 +701,7 @@ def main():
         parser_read.add_argument('-l','--len', default='0', help='elements to read')
         parser_read.add_argument("-u","--user", default=False, help="User for Auth")
         parser_read.add_argument("-p","--password", default=False, help="Password for Auth")
+        parser_read.add_argument("-t","--timeout", default=5, help="Request Timeout in Seconds")
         parser_read.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
         parser_read.add_argument("mid", help="Module Id or Key")
         parser_read.add_argument("vid", help="Variable Id or Key")
@@ -673,6 +712,7 @@ def main():
         parser_upload.add_argument('-r','--retry', default='3', help='number of retries to attempt')
         parser_upload.add_argument("-u","--user", default=False, help="User for Auth")
         parser_upload.add_argument("-p","--password", default=False, help="Password for Auth")
+        parser_upload.add_argument("-t","--timeout", default=5, help="Request Timeout in Seconds")
         parser_upload.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
         parser_upload.add_argument("mid", help="Module Id or Key")
         parser_upload.add_argument("vid", help="Variable Id or Key")
@@ -683,6 +723,7 @@ def main():
         parser_download.add_argument('-r','--retry', default='3', help='number of retries to attempt')
         parser_download.add_argument("-u","--user", default=False, help="User for Auth")
         parser_download.add_argument("-p","--password", default=False, help="Password for Auth")
+        parser_download.add_argument("-t","--timeout", default=5, help="Request Timeout in Seconds")
         parser_download.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
         parser_download.add_argument("mid", help="Module Id or Key")
         parser_download.add_argument("vid", help="Variable Id or Key")
@@ -690,6 +731,8 @@ def main():
         # Put the arguments passed into args
         parser.set_default_subparser('interactive')
         args = parser.parse_args()
+
+        args.timeout = float(args.timeout)
 
         # Strip trailing / off args.url
         if(args.url[-1:] == '/'):
@@ -705,7 +748,7 @@ def main():
 
         # Attempt to connect to verify the ESPER service is reachable
         querystring = {'mid': 'system'}
-        r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password)
+        r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password, args.timeout)
         if(r.status_code == 200): 
             try:
                 resp = r.json()
@@ -733,11 +776,12 @@ def main():
                 interactive.url = args.url
                 interactive.prog = prog
                 interactive.user = args.user
+                interactive.timeout = args.timeout
                 interactive.password = args.password
                 
                 try:
                     querystring = {'mid': 'system', 'vid': 'device', 'dataOnly':'y'}
-                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password)
+                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password, args.timeout)
                     if(r.status_code == 200): 
                         interactive.host = r.json()
                     else:
@@ -746,13 +790,13 @@ def main():
                         sys.exit(1)
 
                     querystring = {'mid': args.mid }
-                    r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password)
+                    r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password, args.timeout)
 
                     if(r.status_code == 200): 
                         interactive.module = r.json()['key']
                     else:
                         querystring = {'mid': 'system' }
-                        r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password)
+                        r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password, args.timeout)
 
                         if(r.status_code == 200): 
                             interactive.module = r.json()['key']
@@ -796,7 +840,7 @@ def main():
                     sys.exit(0) 
                 
                 # Send POST request
-                r = request_post_with_auth(args.url + '/write_var', querystring, payload, args.user, args.password)
+                r = request_post_with_auth(args.url + '/write_var', querystring, payload, args.user, args.password, args.timeout)
                 if(r.status_code == 200):
                     if(args.verbose): 
                         err = r.json()
@@ -815,7 +859,7 @@ def main():
                 args.vid = args.vid.lower()
                 querystring = {'mid': args.mid, 'vid': args.vid, 'offset': args.offset, 'len': args.len, 'dataOnly':'y'}
                 # Send GET request
-                r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password)
+                r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password, args.timeout)
 
                 if(r.status_code == 200): 
                     print(r.content)
@@ -833,7 +877,7 @@ def main():
                 # Get var info first, need to know max chunk size of file to send
                 with args.file as upload_file:
                     querystring = {'mid': args.mid, 'vid': args.vid }
-                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password)
+                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password, args.timeout)
                     if(r.status_code == 200):
                         # Var found, lets see what we got!
                         vinfo = r.json()
@@ -859,7 +903,7 @@ def main():
                             sys.stdout.flush()
                             # transmit payload using binary methods
                             querystring = {'mid': args.mid, 'vid': args.vid, 'offset': file_offset, 'len': chunk_size, 'binary': 'y'}
-                            r = request_post_with_auth(args.url + '/write_var', querystring, payload, args.user, args.password)
+                            r = request_post_with_auth(args.url + '/write_var', querystring, payload, args.user, args.password, args.timeout)
 
                             # Did we transfer successfully?
                             if(r.status_code == 200):
@@ -904,7 +948,7 @@ def main():
                 with args.file as download_file:
 
                     querystring = {'mid': args.mid, 'vid': args.vid }
-                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password)
+                    r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password, args.timeout)
 
                     if(r.status_code == 200):
                         # Var found, lets see what we got!
@@ -931,7 +975,7 @@ def main():
 
                             # transmit payload using binary methods
                             querystring = {'mid': args.mid, 'vid': args.vid, 'offset': file_offset, 'len': chunk_size, 'binary': 'y', 'dataOnly': 'y'}
-                            r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password)
+                            r = request_get_with_auth(args.url + '/read_var', querystring, args.user, args.password, args.timeout)
 
                             # Did we transfer successfully?
                             if(r.status_code == 200):
