@@ -95,3 +95,9 @@ V1.2.22 2018-09-26
 - 'ls' now only requests five elements from each var in a module, instead of all the data
 - 'ls' now requests each variable individually to ease issues with timeouts and slow responses
 - missing user/pass parameters passed to upload command
+
+V1.2.23 2018-09-26
+- fix whitespace issue
+- add usage and example to timeout option in interactive mode
+- fix print formatting error in do_read()
+- removed some pylint warnings

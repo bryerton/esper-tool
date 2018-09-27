@@ -43,9 +43,8 @@ def request_get_with_auth(url, params, user, password, timeout_in_seconds):
         r.status_code = 408
         return r
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         print("Unable to connect to " + str(url))
-        #print(e)
         sys.exit(1)
 
 def request_post_with_auth(url, params, payload, user, password, timeout_in_seconds):
@@ -61,9 +60,8 @@ def request_post_with_auth(url, params, payload, user, password, timeout_in_seco
         r.status_code = 408
         return r
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         print("Unable to connect to " + str(url))
-        #print(e)
         sys.exit(1)
 
 def set_default_subparser(self, name, args=None):
@@ -192,7 +190,7 @@ class InteractiveMode(cmd.Cmd):
         pass
 
     def do_timeout(self, line): 
-        """ Purpose: Adjust HTTP request timeout length """
+        """Purpose: Adjust HTTP request timeout length\nUsage: timeout <seconds>\nExample: timeout 0.5\n"""
         line_args = str.split(line,' ')
         if(line_args[0] == ''):
             print("Current timeout period is " + str(self.timeout))
@@ -456,7 +454,7 @@ class InteractiveMode(cmd.Cmd):
                         if(r.status_code == 200): 
                             resp = r.json()
                             if(not resp['d']): 
-                                print('%-5s %-32 %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s[%d]' % ('Null',resp['len'])))
+                                print('%-5s %-32s %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s[%d]' % ('Null',resp['len'])))
                             elif((len(resp['d']) > 4) and (resp['type'] != 11)):
                                 print('%-5s %-32s %-16s %-8s %-8s %-32s' % (str(resp['id']), resp['key'], Esper().getTypeString(resp['type']), Esper().getOptionString(resp['opt']), Esper().getOptionString(resp['stat']), '%s[%d]' % ('Array',resp['len'])))
                             elif(resp['type'] == 11):
