@@ -85,3 +85,13 @@ V1.2.20 2018-03-16
 
 V1.2.21 2018-07-09
 - added 5 second timeout to requests.get() and requests.post() calls
+
+V1.2.22 2018-09-26
+- added command line argument "-t N" or "--timeout N" to set HTTP request timeout in seconds
+- added interactive mode option 'timeout N' to set HTTP request timeout in seconds
+- hitting enter on an empty line in interactive mode no longer resends the last command
+- timing out no longer kicks you out of interactive mode
+- 'ls' now returns up to four elements before it just shows Array(len) in data field
+- 'ls' now only requests five elements from each var in a module, instead of all the data
+- 'ls' now requests each variable individually to ease issues with timeouts and slow responses
+- missing user/pass parameters passed to upload command
