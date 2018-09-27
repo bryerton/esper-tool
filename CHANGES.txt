@@ -101,3 +101,7 @@ V1.2.23 2018-09-26
 - add usage and example to timeout option in interactive mode
 - fix print formatting error in do_read()
 - removed some pylint warnings
+
+V1.2.24 2018-09-26
+- added documentation for timeout to README.rst
+- cleaned up documentation slightly

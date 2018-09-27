@@ -35,7 +35,7 @@ The recommended installation method is via pip
 Interactive
 -----------
  Command:
-  `esper-tool interactive [-h] [-u USER] [-p PASS] <url> [mid]`
+  `esper-tool interactive [-h] [-u USER] [-p PASS] [-t TIMEOUT] <url> [mid]`
 
  Purpose:
   Connects to an esper service located at `url` and opens an interactive shell 
@@ -46,15 +46,14 @@ Interactive
   `--help`
    Print out help for this subcommand 
  
-  `-u USER`
-  
-  `--user USER`
+  `-u USER` or  `--user USER`
    User to use for HTTP basic authentication
  
-  `-p PASS`
-  
-  `--password PASS`
+  `-p PASS` or `--password PASS`
    Password to use for HTTP basic authentication. If `-u` is specified, but `-p` is not, the user will be prompted for a password
+
+  `-t TIMEOUT` or `--timeout TIMEOUT`
+   Time to wait for response before timing out. Can be given in fractions of a second. Defaults to 5 seconds.
 
   `url`
    Location of ESPER web service given in standard web URL format. If the port is excluded, it defaults to 80
@@ -65,7 +64,7 @@ Interactive
 Read
 ----
  Command:
-  `esper-tool read [-h] [-u USER] [-p PASS] [-o OFFSET] [-l LEN] <url> <mid> <vid>`
+  `esper-tool read [-h] [-u USER] [-p PASS] [-t TIMEOUT] [-o OFFSET] [-l LEN] <url> <mid> <vid>`
  
  Purpose:
   Read an ESPER variable's data, located at URL. Return value is JSON data type
@@ -76,24 +75,19 @@ Read
   `--help`
    Print out help for this subcommand
 
-  `-u USER`
-  
-  `--user USER`
+  `-u USER` or  `--user USER`
    User to use for HTTP basic authentication
  
-  `-p PASS`
-  
-  `--password PASS`
+  `-p PASS` or `--password PASS`
    Password to use for HTTP basic authentication. If `-u` is specified, but `-p` is not, the user will be prompted for a password
 
-  `-o OFFSET`
+  `-t TIMEOUT` or `--timeout TIMEOUT`
+   Time to wait for response before timing out. Can be given in fractions of a second. Defaults to 5 seconds.
 
-  `--offset OFFSET`
+  `-o OFFSET` or `--offset OFFSET`
    Element to start read at within ESPER variable. Defaults to first element (0)
 
-  `-l LEN`
-
-  `--len LEN`
+  `-l LEN` or `--len LEN`
    Number of elements to read
 
   `url`
@@ -112,7 +106,7 @@ Read
 Write
 -----
  Command:
-  `esper-tool write [-h] [-u USER] [-p PASS] [-d DATA] [-f FILE] [-o OFFSET] <url> <mid> <vid>`
+  `esper-tool write [-h] [-u USER] [-p PASS] [-t TIMEOUT] [-d DATA] [-f FILE] [-o OFFSET] <url> <mid> <vid>`
  
  Purpose:
   Writes JSON data to an ESPER variable. May write the full array or a slice. Data can be specified on the command line or by a file
@@ -123,29 +117,22 @@ Write
   `--help`
    Print out help for this subcommand 
 
-  `-u USER`
-  
-  `--user USER`
+  `-u USER` or  `--user USER`
    User to use for HTTP basic authentication
  
-  `-p PASS`
-  
-  `--password PASS`
+  `-p PASS` or `--password PASS`
    Password to use for HTTP basic authentication. If `-u` is specified, but `-p` is not, the user will be prompted for a password
 
-  `-d DATA`
+  `-t TIMEOUT` or `--timeout TIMEOUT`
+   Time to wait for response before timing out. Can be given in fractions of a second. Defaults to 5 seconds.
 
-  `--data DATA`
+  `-d DATA` or `--data DATA`
    JSON data to write. May take the form of any standard JSON datatype. Datatype must be compatible with ESPER datatype of variable
 
-  `-f FILE`
-
-  `--file FILE`
+  `-f FILE` or `--file FILE`
    File containing JSON data to be written to variable. Same as `-d` but data is written in FILE 
 
-  `-o OFFSET`
-
-  `--offset OFFSET`
+  `-o OFFSET` or `--offset OFFSET`
    Element to start read at within ESPER variable. Defaults to first element (0)
 
   `url`
@@ -168,7 +155,7 @@ Upload
 ------
 
  Command:
-  `esper-tool upload [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
+  `esper-tool upload [-h] [-u USER] [-p PASS] [-t TIMEOUT] -f FILE [-r RETRY] <url> <mid> <vid>`
  
  Purpose:
   Upload a binary file to an ESPER variable. Particularly useful for updates to large variable arrays, binary data must match binary format of ESPER variable, or data loaded will be erroneous. 
@@ -179,24 +166,19 @@ Upload
   `--help`
    Print out help for this subcommand 
 
-  `-u USER`
-  
-  `--user USER`
+  `-u USER` or  `--user USER`
    User to use for HTTP basic authentication
  
-  `-p PASS`
-  
-  `--password PASS`
+  `-p PASS` or `--password PASS`
    Password to use for HTTP basic authentication. If `-u` is specified, but `-p` is not, the user will be prompted for a password
 
-  `-f FILE`
+  `-t TIMEOUT` or `--timeout TIMEOUT`
+   Time to wait for response before timing out. Can be given in fractions of a second. Defaults to 5 seconds.
 
-  `--file FILE`
+  `-f FILE` or `--file FILE`
    File containing binary data to be written to variable
 
-  `-r RETRY`
-
-  `--retry RETRY`
+  `-r RETRY` or `--retry RETRY`
    Number of times to retry if timeout occurs, can be useful if ESPER service connected to is slow to write to disk/flash
   
   `url`
@@ -215,7 +197,7 @@ Upload
 Download
 --------
  Command:
-  `esper-tool download [-h] [-u USER] [-p PASS] -f FILE [-r RETRY] <url> <mid> <vid>`
+  `esper-tool download [-h] [-u USER] [-p PASS] [-t TIMEOUT] -f FILE [-r RETRY] <url> <mid> <vid>`
  
  Purpose:
   Downloads variable data to a binary file.
@@ -226,24 +208,19 @@ Download
   `--help`
    Print out help for this subcommand 
 
-  `-u USER`
-  
-  `--user USER`
+  `-u USER` or  `--user USER`
    User to use for HTTP basic authentication
  
-  `-p PASS`
-  
-  `--password PASS`
+  `-p PASS` or `--password PASS`
    Password to use for HTTP basic authentication. If `-u` is specified, but `-p` is not, the user will be prompted for a password
 
-  `-f FILE`
+  `-t TIMEOUT` or `--timeout TIMEOUT`
+   Time to wait for response before timing out. Can be given in fractions of a second. Defaults to 5 seconds.
 
-  `--file FILE`
+  `-f FILE` or `--file FILE`
    Location of file to write variable data to
 
-  `-r RETRY`
-
-  `--retry RETRY`
+  `-r RETRY` or `--retry RETRY`
    Number of times to retry if timeout occurs, can be useful if ESPER service connected to is slow to write to disk/flash
   
   `url`
