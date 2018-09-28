@@ -10,8 +10,10 @@ import requests
 import argparse
 import cmd
 import time
+import json
 import getpass
 import platform
+import re
 from .version import __version__
 
 if(platform.system() == u'Windows'):
@@ -313,25 +315,79 @@ class InteractiveMode(cmd.Cmd):
             return self.var_completion
 
     def do_write(self, line):
-        """Purpose: Write module variable\nUsage: write <vid> <data> [offset]\n"""
+        """Purpose: Write module variable\nUsage: write <vid> <data> [offset] [all]\n"""
         try:
             line_args = str.split(line,' ')
-            if(line):
-                vid = line_args[0].lower() 
-            else:
-                print("Please specify variable to write to\nwrite <vid> <data>")
+            if(not line):
+                print("Missing variable to write to\nwrite <vid> <data>")
                 return
+            
+            vid = line_args[0].lower() 
+            offset = 0
+            
+            if((len(line_args) < 2) or (line_args[1] == '')):
+                print("Missing data to write to %s \nwrite %s <data>" % (vid, vid))
+                return
+            
+            # If passing an array, there may be spaces between comma separated values, wrecking the initial argument 'split'
+            # Lets fix it up!
+            if(line_args[1][0] == '['):
+                line_args[1] = re.search(r'\[(.*)\]', line).group(1)
+                line_args = line_args[0:2] + str.split(line[str.find(line,']')+1:],' ')[1:]
+            
+            # Re-split the payload argument and parse it
+            payload_entities = str.split(line_args[1],',')
+    
+            # Lets make all payloads an array to conform to the obsolete RFC4627... makes later steps easier if everything is aray           
+            payload = '['
+            for elem in payload_entities:
+                # Clear out white space
+                elem = elem.strip()
 
-            if(len(line_args) > 1):
-                payload = line_args[1]
-            else:
-                print("Please specify the data to write\nwrite %s <data>" % vid)
+                # Booleans are an oddity, lets ensure capitalization doesn't matter for them, convert to JSON spec of all lowercase
+                if((elem.lower() == 'true') or (elem.lower() == 'false')):
+                    elem = elem.lower()
+
+                # Strings need to be changed to use double-quotes to work in JSON as well    
+                if(elem[0] == "'"):
+                    elem = "\"" + elem[1:-1] + "\""
+                    
+                payload = payload + elem.strip() + ','
+                
+            payload = payload[0:-1] + ']'
+
+            # Convert payload from JSON to python dict
+            try:
+                payload_dict = json.loads(payload)
+            except:
+                print("Data is not valid JSON")
                 return
 
             if(len(line_args) > 2):
-                offset = line_args[2]
-            else:
-                offset = 0
+                # Offset or 'all' check                
+                if(line_args[2].lower() == 'all'):
+                    # Bit of a hack for the moment, reach out and grab the variables total length
+                    querystring = {'mid': self.module, 'vid': vid, 'includeData': 'n'}
+                    r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
+                    if(r.status_code == 200): 
+                        resp = r.json()        
+                        if(len(payload_dict) > 1):
+                            print("Data must be single element to use 'all' attribute")
+                            return
+                        else:
+                            # Generate new JSON payload that is an array containing as many elements as the variable can take
+                            old_payload_dict = payload_dict
+                            for n in range(resp['len']-1):
+                                payload_dict.append(old_payload_dict[0])
+
+                    else:
+                        print("Error retrieving length of variable")
+                        return
+                else:
+                    offset = int(line_args[2])
+
+            # Convert payload back to JSON back so we send conformal JSON requests
+            payload = json.dumps(payload_dict)
 
             querystring = {'mid': self.module, 'vid': vid, 'offset': offset}
             r = request_post_with_auth(self.url + '/write_var', querystring, payload, self.user, self.password, self.timeout)
@@ -427,7 +483,12 @@ class InteractiveMode(cmd.Cmd):
                         r = request_get_with_auth(self.url + '/read_var', querystring, self.user, self.password, self.timeout)
                         if(r.status_code == 200): 
                             resp = r.json()
-                            print(str(resp['d']))
+                            if(len(resp['d']) > 1):
+                                for n in range(len(resp['d'])):                                
+                                    print("%s %s" % (str(n).rjust(5), str(resp['d'][n])))
+                            else:
+                                print(str(resp['d'][0]))
+
                         elif(r):
                             self.print_esper_error(r.json())
 
@@ -827,13 +888,35 @@ def main():
                 if args.data is not None:
                     payload = args.data
 
+                    if(payload[0] == '['):
+                        # booleans are an oddity, lets ensure capitalization doesn't matter for them, convert to JSON spec of all lowercase
+                        payload_entities = str.split(payload[1:-1],',')
+                    
+                        # Lets make all payloads an array to conform to the obsolete RFC4627... makes later steps easier if everything is aray           
+                        payload = '['
+                        for elem in payload_entities:
+                            # Clear out white space
+                            elem = elem.strip()
+
+                            # Booleans are an oddity, lets ensure capitalization doesn't matter for them, convert to JSON spec of all lowercase
+                            if((elem.lower() == 'true') or (elem.lower() == 'false')):
+                                elem = elem.lower()
+
+                            # Strings need to be changed to use double-quotes to work in JSON as well    
+                            if(elem[0] == "'"):
+                                elem = "\"" + elem[1:-1] + "\""
+                                
+                            payload = payload + elem.strip() + ','
+                            
+                        payload = payload[0:-1] + ']'
+
                 # if -f is set, we will write in file that contains JSON in the above format
                 elif args.file is not None:
                     with args.file as upload_file:
                         payload = upload_file.read()
                 else:
                     # No data specified to send on write, just bail out. Argparser should ensure this branch never gets reached
-                    print("No data specified to send, exitting\n")
+                    print("No data specified to send, exiting\n")
                     # It didn't fail, so return 0 
                     sys.exit(0) 
                 

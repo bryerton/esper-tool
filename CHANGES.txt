@@ -105,3 +105,10 @@ V1.2.23 2018-09-26
 V1.2.24 2018-09-26
 - added documentation for timeout to README.rst
 - cleaned up documentation slightly
+
+V1.2.25 2018-09-27
+- added 'all' option to write requests in interactive mode
+- interactive mode can now handle spaces in arrays when writing. ie "write <var> [1, 3, 5] <offset>" now works properly
+- interactive and write modes can now handle oddly cased booleans when writing. ie "write <var> True" now works
+- changed interactive mode read printout for arrays, now lists <index> <element data> as rows for easier parsing
+- interactive mode write will now pre-parse data payload and report if the payload is not proper JSON
