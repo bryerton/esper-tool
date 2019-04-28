@@ -4,3 +4,4 @@ esper_tool/*.pyc
 .pypirc
 __pycache__
 pycache
+.vscode
