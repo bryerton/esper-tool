@@ -16,6 +16,7 @@ import getpass
 import re
 import time
 import datetime
+import numpy as np
 from . import esper
 from .version import __version__
 
@@ -393,6 +394,18 @@ class InteractiveMode(cmd.Cmd):
         except:
             print("Invalid Arguments")
 
+    def complete_wr(self, content, line, begidx, endidx):
+        if content:
+            return [
+                variable for variable in self.var_completion
+                if variable.startswith(content)
+            ]
+        else:
+            return self.var_completion
+
+    def do_wr(self, line):
+        self.do_write(line)
+
     def complete_ls(self, content, line, begidx, endidx):
         if content:
             return [
@@ -405,6 +418,20 @@ class InteractiveMode(cmd.Cmd):
     def do_ls(self, line):
         """Purpose: Read module variable(s)\nUsage: ls <vid> [offset] [length] [repeat]\n"""
         self.do_read(line)
+
+    def do_rd(self, line):
+        """Purpose: Read module variable(s)\nUsage: rd <vid> [offset] [length] [repeat]\n"""
+        self.do_read(line)
+
+    def complete_rd(self, content, line, begidx, endidx):
+        if content:
+            return [
+                variable for variable in self.var_completion
+                if variable.startswith(content)
+            ]
+        else:
+            return self.var_completion
+
 
     def complete_read(self, content, line, begidx, endidx):
         if content:
@@ -731,7 +758,7 @@ def main():
         # Write arguments
         parser_write = subparsers.add_parser('write', help='[-o <offset>] [-d <json value/array>]  <url> <mid> <vid>')
         parser_write.add_argument('-d', '--data', help="JSON data to write")
-        parser_write.add_argument('-f', '--file', type=argparse.FileType('r'), help="JSON file to write from")    
+        parser_write.add_argument('-f', '--file', type=argparse.FileType('r'), help="JSON file to write from")
         parser_write.add_argument('-o', '--offset', default='0',dest='offset', help='offset to write to')
         parser_write.add_argument("-u", "--user", default=False, help="User for Auth")
         parser_write.add_argument("-p", "--password", default=False, help="Password for Auth")
@@ -784,25 +811,52 @@ def main():
         parser_discover.add_argument("--id", default=None, help="Device id to search for")
         parser_discover.add_argument("--hwid", default="", help="Hardware id to search for")
 
+        # Config arguments
+        parser_get_config = subparsers.add_parser('get-config', help='Read configuration from device')
+        parser_get_config.add_argument('-f', '--file', required='true', type=argparse.FileType('wt'), help="Location to store config")
+        parser_get_config.add_argument('-r', '--retry', default='3', help='number of retries to attempt')
+        parser_get_config.add_argument("-u", "--user", default=False, help="User for Auth")
+        parser_get_config.add_argument("-p", "--password", default=False, help="Password for Auth")
+        parser_get_config.add_argument("-t", "--timeout", default=5, help="Request Timeout in Seconds")
+        parser_get_config.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
+
+        parser_set_config = subparsers.add_parser('set-config', help='Write configuration to device')
+        parser_set_config.add_argument('-f', '--file', required='true', type=argparse.FileType('rt'), help="Location to read config")
+        parser_set_config.add_argument('-r', '--retry', default='3', help='number of retries to attempt')
+        parser_set_config.add_argument("-u", "--user", default=False, help="User for Auth")
+        parser_set_config.add_argument("-p", "--password", default=False, help="Password for Auth")
+        parser_set_config.add_argument("-t", "--timeout", default=5, help="Request Timeout in Seconds")
+        parser_set_config.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
+
+        parser_diff = subparsers.add_parser('diff', help='Compare configuration from file to device')
+        parser_diff.add_argument('-f', '--file', required='true', type=argparse.FileType('rt'), help="Location to read config")
+        parser_diff.add_argument('-d', '--delta', type=argparse.FileType('wt'), help="Location to write delta")
+        parser_diff.add_argument('-r', '--retry', default='3', help='number of retries to attempt')
+        parser_diff.add_argument("-u", "--user", default=False, help="User for Auth")
+        parser_diff.add_argument("-p", "--password", default=False, help="Password for Auth")
+        parser_diff.add_argument("-t", "--timeout", default=5, help="Request Timeout in Seconds")
+        parser_diff.add_argument("url", help="Node URL. ie: 'http://<hostname>:<port>'")
+
         # Put the arguments passed into args
         parser.set_default_subparser('interactive')
         args = parser.parse_args()
         try:
+
+            args.timeout = float(args.timeout)
+
+            # Strip trailing / off args.url
+            if(args.url[-1:] == '/'):
+                args.url = args.url[0:-1]
+
+            # if url is missing 'http', add it
+            if((args.url[0:7] != 'http://') and (args.url[0:8] != 'https://')):
+                args.url = 'http://' + args.url
+
+            if(args.user):
+                if(not args.password):
+                    args.password = getpass.getpass("Insert your password: ")
+
             if(args.command == 'interactive'):
-
-                args.timeout = float(args.timeout)
-
-                # Strip trailing / off args.url
-                if(args.url[-1:] == '/'):
-                    args.url = args.url[0:-1]
-
-                # if url is missing 'http', add it
-                if((args.url[0:7] != 'http://') and (args.url[0:8] != 'https://')):
-                    args.url = 'http://' + args.url
-
-                if(args.user):
-                    if(not args.password):
-                        args.password = getpass.getpass("Insert your password: ")
 
                 # Attempt to connect to verify the ESPER service is reachable
                 querystring = {'mid': 'system'}
@@ -825,7 +879,7 @@ def main():
                         sys.exit(1)
                     except:
                         print("Non-JSON response from ESPER service. Exiting")
-                        print(r.content)             
+                        print(r.content)
                         sys.exit(1)
 
                 interactive = InteractiveMode()
@@ -1109,6 +1163,48 @@ def main():
                     ))
 
                 sys.exit(0)
+
+            elif(args.command == 'get-config'):
+                config = get_configuration(args)
+                json_config = json.dumps(config, indent = 2)
+                args.file.write(json_config)
+                sys.exit(0)
+            elif(args.command == 'set-config'):
+                current_config = get_configuration(args)
+                config = json.loads(args.file.read())
+                for module in config:
+                    for var in config[module]:
+                        if(not np.array_equal(config[module][var],current_config[module][var])):
+                            querystring = {'mid': module, 'vid': var }
+                            r = request_post_with_auth(args.url + '/write_var', querystring, json.dumps(config[module][var]), args.user, args.password, args.timeout)
+                            if(r.status_code == 200):
+                                print("Wrote to " + str(module) + "/" + str(var) + " " + json.dumps(config[module][var]))
+                            else:
+                                print("Failed writing to " + str(module) + "/" + str(var) + " " + json.dumps(config[module][var]) + " Status code: " + str(r.status_code))
+                sys.exit(0)
+
+            elif(args.command == 'diff'):
+                delta_config = dict()
+                current_config = get_configuration(args)
+                config = json.loads(args.file.read())
+                for module in config:
+                    delta_config[module] = dict()
+                    for var in config[module]:
+                        if(not np.array_equal(config[module][var],current_config[module][var])):
+                            delta_config[module][var] = config[module][var]
+                            print(str(module) + "/" + str(var) + " Config: " + str(config[module][var]) + " Device: " + str(current_config[module][var]))
+
+
+
+                final_config = dict()
+                for key in delta_config:
+                    if len(delta_config[key]) > 0:
+                        final_config[key] = delta_config[key]
+
+                if(args.delta and (len(final_config) > 0)):
+                    args.delta.write(json.dumps(final_config, indent=2))
+
+                sys.exit(0)
             else:
                 # No options selected, this should never be reached
                 sys.exit(0)
@@ -1133,6 +1229,41 @@ def main():
         print("\nExiting " + prog)
         sys.exit(0)
 
+def get_configuration(args):
+    def get_module_variables(mid):
+        vars = dict()
+        querystring = {'mid': mid, 'includeVars': 'y', 'includeData': 'y'}
+        r = request_get_with_auth(args.url + '/read_module', querystring, args.user, args.password, args.timeout)
+        if(r.status_code == 200):
+            resp = r.json()
+            for i in range(0, len(resp['var'])):
+                if(resp['var'][i]['opt'] & 0x2):
+                    vars[resp['var'][i]['key']] = resp['var'][i]['d']
+        else:
+            print("Error")
+        return vars
+
+    def get_modules():
+        querystring = {'includeMods': 'y'}
+        r = request_get_with_auth(args.url + '/read_node', querystring, args.user, args.password, args.timeout)
+        modules = []
+        if(r.status_code == 200):
+            resp = r.json()
+            for i in range(0, len(resp['module'])):
+                if(resp['module'][i]['key'] != "system") and (resp['module'][i]['key'] != "storage") and (resp['module'][i]['key'] != "build") and (resp['module'][i]['key'] != "template"):
+                    modules.append(resp['module'][i]['key'])
+        return modules
+
+    config = dict()
+    for module in get_modules():
+        config[module] = get_module_variables(module)
+
+    final_config = dict()
+    for key in config:
+        if len(config[key]) > 0:
+            final_config[key] = config[key]
+
+    return final_config
 
 if __name__ == "__main__":
     main()

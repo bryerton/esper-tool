@@ -14,11 +14,6 @@ import time
 
 ESPER_API_VERSION = 2
 
-
-class EsperHTTP:
-    """Esper HTTP Protocol"""
-
-
 class EsperUDP:
     """ESPER UDP Protocol"""
 

@@ -5,3 +5,4 @@ esper_tool/*.pyc
 __pycache__
 pycache
 .vscode
+*.json
