@@ -1237,7 +1237,8 @@ def get_configuration(args):
         if(r.status_code == 200):
             resp = r.json()
             for i in range(0, len(resp['var'])):
-                if(resp['var'][i]['opt'] & 0x2):
+                # Only get variables that can be written to, and have data (ie: not Null)
+                if(resp['var'][i]['opt'] & 0x2) and (resp['var'][i]['d'] != None):
                     vars[resp['var'][i]['key']] = resp['var'][i]['d']
         else:
             print("Error")
