@@ -1,12 +1,8 @@
-.. image:: https://travis-ci.com/bryerton/esper-tool.svg?branch=master
-    :target: https://travis-ci.com/bryerton/esper-tool
 
-==========
-ESPER TOOL
-==========
+# ESPER TOOL
 
-Overview
---------
+## Overview
+
 A python-based command line utility for accessing a device running the ESPER web service. Works with Python 2 and 3.
 
 The tool allows for the reading and writing of ESPER variables via the command line.
@@ -21,8 +17,8 @@ The available subcommands are:
 
 For a list of interactive shell commands type `help` in the interactive shell prompt
 
-Installation
-------------
+## Installation
+
 The recommended installation method is via pip
 
   To install:
@@ -32,8 +28,8 @@ The recommended installation method is via pip
   To run it locally from the github source:
     `python -m esper_tool`
 
-Interactive
------------
+## Interactive
+
  Command:
   `esper-tool interactive [-h] [-u USER] [-p PASS] [-t TIMEOUT] <url> [mid]`
 
@@ -61,8 +57,8 @@ Interactive
   `mid`
    Module ID or MID to start in. May be given as numerical value, or module key.
 
-Read
-----
+## Read
+
  Command:
   `esper-tool read [-h] [-u USER] [-p PASS] [-t TIMEOUT] [-o OFFSET] [-l LEN] <url> <mid> <vid>`
 
@@ -103,8 +99,8 @@ Read
   `esper-tool read -o 1 -l 32 localhost:8080 0 0`
    Reads `32` elements of variable `0` starting at offset `1`, at` localhost:8080` module `0`, variable `0`
 
-Write
------
+## Write
+
  Command:
   `esper-tool write [-h] [-u USER] [-p PASS] [-t TIMEOUT] [-d DATA] [-f FILE] [-o OFFSET] <url> <mid> <vid>`
 
@@ -151,8 +147,8 @@ Write
   `esper-tool write -d [0,2] -o 1 http://localhost:8080 mymodule myvar`
    Writes the array `[0,2]` to the variable `myvar` starting at the second element. The variable is located in the module `mymodule` on host `localhost:8080`
 
-Upload
-------
+## Upload
+
 
  Command:
   `esper-tool upload [-h] [-u USER] [-p PASS] [-t TIMEOUT] -f FILE [-r RETRY] <url> <mid> <vid>`
@@ -194,8 +190,8 @@ Upload
   `esper-tool upload -v --file ~/waveform.bin -r 3 http://localhost:80/ 5 waveform_replay`
    Uploads the contents of file `waveform.bin` to `localhost` module `5`, variable `waveform_replay`. It will retry `3` times in the event of failure
 
-Download
---------
+## Download
+
  Command:
   `esper-tool download [-h] [-u USER] [-p PASS] [-t TIMEOUT] -f FILE [-r RETRY] <url> <mid> <vid>`
 

@@ -10,9 +10,8 @@ here = path.abspath(path.dirname(__file__))
 exec(open(path.join(here, 'esper_tool/version.py')).read())
 
 
-def readme():
-    with open('README.rst') as f:
-        return f.read()
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 
 setup(
@@ -24,7 +23,8 @@ setup(
     version=__version__,
 
     description='Command line tool for accessing ESPER',
-    long_description=readme(),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
 
     # The project's main homepage.
     url='https://github.com/bryerton/esper-tool',
@@ -77,7 +77,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['requests', 'argparse', 'future'],
+    install_requires=['requests', 'argparse', 'future', 'numpy'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
